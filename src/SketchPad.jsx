@@ -52,6 +52,9 @@ export default class SketchPad extends Component {
     this.onMouseMove = this.onMouseMove.bind(this);
     this.onDebouncedMove = this.onDebouncedMove.bind(this);
     this.onMouseUp = this.onMouseUp.bind(this);
+    this.onTouchStart = this.onTouchStart.bind(this);
+    this.onTouchMove = this.onTouchMove.bind(this);
+    this.onTouchEnd = this.onTouchEnd.bind(this);
   }
 
   componentDidMount() {
@@ -82,6 +85,15 @@ export default class SketchPad extends Component {
     }
   }
 
+  onTouchStart(e) {
+    let firstTouch = e.targetTouches[0];
+    const data = this.tool.onMouseDown(firstTouch.pageX, firstTouch.pageY, this.props.color, this.props.size, this.props.fillColor);
+    if (this.props.onDebouncedItemChange) {
+      this.interval = setInterval(this.onDebouncedMove, this.props.debounceTime);
+    }
+    e.preventDefault();
+  }
+
   onDebouncedMove() {
     if (typeof this.tool.onDebouncedMouseMove == 'function' && this.props.onDebouncedItemChange) {
       this.props.onDebouncedItemChange.apply(null, this.tool.onDebouncedMouseMove());
@@ -93,6 +105,13 @@ export default class SketchPad extends Component {
     data && data[0] && this.props.onEveryItemChange && this.props.onEveryItemChange.apply(null, data);
   }
 
+  onTouchMove(e) {
+    let firstTouch = e.targetTouches[0];
+    const data = this.tool.onMouseMove(firstTouch.pageX, firstTouch.pageY);
+    data && data[0] && this.props.onEveryItemChange && this.props.onEveryItemChange.apply(null, data);
+    e.preventDefault();
+  }
+
   onMouseUp(e) {
     const data = this.tool.onMouseUp(...this.getCursorPosition(e));
     data && data[0] && this.props.onCompleteItem && this.props.onCompleteItem.apply(null, data);
@@ -100,6 +119,17 @@ export default class SketchPad extends Component {
       clearInterval(this.interval);
       this.interval = null;
     }
+  }
+
+  onTouchEnd(e) {
+    let firstTouch = e.targetTouches[0];
+    const data = this.tool.onMouseUp(firstTouch.pageX, firstTouch.pageY);
+    data && data[0] && this.props.onCompleteItem && this.props.onCompleteItem.apply(null, data);
+    if (this.props.onDebouncedItemChange) {
+      clearInterval(this.interval);
+      this.interval = null;
+    }
+    e.preventDefault();
   }
 
   getCursorPosition(e) {
@@ -120,6 +150,9 @@ export default class SketchPad extends Component {
         onMouseMove={this.onMouseMove}
         onMouseOut={this.onMouseUp}
         onMouseUp={this.onMouseUp}
+        onTouchStart={this.onTouchStart}
+        onTouchEnd={this.onTouchEnd}
+        onTouchMove={this.onTouchMove}
         width={width}
         height={height}
       />
