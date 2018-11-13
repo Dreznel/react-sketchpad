@@ -87,11 +87,11 @@ export default class SketchPad extends Component {
 
   onTouchStart(e) {
     let firstTouch = e.targetTouches[0];
-    const data = this.tool.onMouseDown(firstTouch.pageX, firstTouch.pageY, this.props.color, this.props.size, this.props.fillColor);
+    const data = this.tool.onMouseDown(...this.getTouchPosition(firstTouch), this.props.color, this.props.size, this.props.fillColor);
     if (this.props.onDebouncedItemChange) {
       this.interval = setInterval(this.onDebouncedMove, this.props.debounceTime);
     }
-    e.preventDefault();
+    //e.preventDefault();
   }
 
   onDebouncedMove() {
@@ -107,9 +107,9 @@ export default class SketchPad extends Component {
 
   onTouchMove(e) {
     let firstTouch = e.targetTouches[0];
-    const data = this.tool.onMouseMove(firstTouch.pageX, firstTouch.pageY);
+    const data = this.tool.onMouseMove(...this.getTouchPosition(firstTouch));
     data && data[0] && this.props.onEveryItemChange && this.props.onEveryItemChange.apply(null, data);
-    e.preventDefault();
+    //e.preventDefault();
   }
 
   onMouseUp(e) {
@@ -122,14 +122,14 @@ export default class SketchPad extends Component {
   }
 
   onTouchEnd(e) {
-    let firstTouch = e.targetTouches[0];
-    const data = this.tool.onMouseUp(firstTouch.pageX, firstTouch.pageY);
+    let firstTouch = e.changedTouches[0];
+    const data = this.tool.onMouseUp(...this.getTouchPosition(firstTouch));
     data && data[0] && this.props.onCompleteItem && this.props.onCompleteItem.apply(null, data);
     if (this.props.onDebouncedItemChange) {
       clearInterval(this.interval);
       this.interval = null;
     }
-    e.preventDefault();
+    //e.preventDefault();
   }
 
   getCursorPosition(e) {
@@ -138,6 +138,14 @@ export default class SketchPad extends Component {
       e.clientX - left,
       e.clientY - top
     ];
+  }
+
+  getTouchPosition(touch) {
+    const {top, left} = this.canvas.getBoundingClientRect();
+    return [
+      touch.clientX - left,
+      touch.clientY - top
+    ]
   }
 
   render() {
